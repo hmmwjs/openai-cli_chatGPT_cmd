@@ -1,0 +1,58 @@
+
+# 1.编码内容导致的崩溃
+promot:用十种人类语言表达“你是个憨皮”，最后一个用 印地语
+error:
+    Traceback (most recent call last):
+      File ".\simpleChatGPT.py", line 94, in generate_chat_response
+        self.write_readble_to_txt(self.messages[-1]["role"], self.messages[-1]["content"])
+      File ".\simpleChatGPT.py", line 48, in write_readble_to_txt
+        f.write(f"## <font color=\"{role_color[role]}\">{role}:</font>\n{content_str}\n\n")
+    UnicodeEncodeError: 'gbk' codec can't encode character '\ub108' in position 206: illegal multibyte sequence
+solve:encoding='utf-8'
+example:with open(self.file_name, "a",encoding='utf-8') as f:
+# 2.token太长导致的崩溃
+promot:讲一个1000字的故事(反复让其讲述或者总结)
+error:
+    Traceback (most recent call last):
+      File ".\simpleChatGPT.py", line 80, in generate_chat_response
+        for chunk in openai.ChatCompletion.create(
+      File "C:\Users\Hmm\AppData\Roaming\Python\Python38\site-packages\openai\api_resources\chat_completion.py", line 25, in create
+        return super().create(*args, **kwargs)
+      File "C:\Users\Hmm\AppData\Roaming\Python\Python38\site-packages\openai\api_resources\abstract\engine_api_resource.py", line 153, in create
+        response, _, api_key = requestor.request(
+      File "C:\Users\Hmm\AppData\Roaming\Python\Python38\site-packages\openai\api_requestor.py", line 226, in request
+        resp, got_stream = self._interpret_response(result, stream)
+      File "C:\Users\Hmm\AppData\Roaming\Python\Python38\site-packages\openai\api_requestor.py", line 619, in _interpret_response
+        self._interpret_response_line(
+      File "C:\Users\Hmm\AppData\Roaming\Python\Python38\site-packages\openai\api_requestor.py", line 679, in _interpret_response_line
+        raise self.handle_error_response(
+    openai.error.InvalidRequestError: This model's maximum context length is 4097 tokens. However, your messages resulted in 5535 tokens. Please reduce the length of the messages.
+solve:No
+# 3.消息太过于频繁导致的崩溃
+promot:我们来数数字好不好，1
+Error:
+    Traceback (most recent call last):
+      File ".\simpleChatGPT.py", line 79, in generate_chat_response
+        for chunk in openai.ChatCompletion.create(
+      File "C:\Users\Hmm\AppData\Roaming\Python\Python38\site-packages\openai\api_resources\chat_completion.py", line 25, in create
+        return super().create(*args, **kwargs)
+      File "C:\Users\Hmm\AppData\Roaming\Python\Python38\site-packages\openai\api_resources\abstract\engine_api_resource.py", line 153, in create
+        response, _, api_key = requestor.request(
+      File "C:\Users\Hmm\AppData\Roaming\Python\Python38\site-packages\openai\api_requestor.py", line 226, in request
+        resp, got_stream = self._interpret_response(result, stream)
+      File "C:\Users\Hmm\AppData\Roaming\Python\Python38\site-packages\openai\api_requestor.py", line 619, in _interpret_response
+        self._interpret_response_line(
+      File "C:\Users\Hmm\AppData\Roaming\Python\Python38\site-packages\openai\api_requestor.py", line 679, in _interpret_response_line
+        raise self.handle_error_response(
+    openai.error.RateLimitError: Rate limit reached for default-gpt-3.5-turbo in organization org-qpsNIQtn1TUCPdSiC4sFb0f2 on requests per min. Limit: 3 / min. Please try again in 20s. Contact us through our help center at help.openai.com if you continue to have issues. Please add a payment method to your account to increase your rate limit. Visit https://platform.openai.com/account/billing to add a payment method.
+solve:sleep后重试。参考#https://platform.openai.com/docs/guides/rate-limits/error-mitigation
+example:
+    def generate_chat_response(self):
+        try:openai.ChatCompletion.create()...
+        except:
+            time.sleep(3)
+            self.generate_chat_response()
+# 4.Mac上命令行输入中文再删除时显示异常
+solve:No
+NOTE:没有好的解决方法，不换行情况下可以代码中添加 import readline，但会导致换行时整行丢失。Windows上如果添加readline后无法方向键上翻上一条语句。
+

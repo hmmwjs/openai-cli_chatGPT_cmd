@@ -1,4 +1,6 @@
 import datetime
+#import readline
+import time
 import os
 import json
 import argparse 
@@ -42,7 +44,7 @@ class Chatbot:
 
     def write_readble_to_txt(self, role, content_str):
         role_color={"system":"red","user":"blue","assistant":"green"}
-        with open(self.file_name, "a") as f:
+        with open(self.file_name, "a",encoding='utf-8') as f:
             f.write(f"## <font color=\"{role_color[role]}\">{role}:</font>\n{content_str}\n\n")
 
     def read_from_txt(self, filename):
@@ -73,21 +75,29 @@ class Chatbot:
         self.write_readble_to_txt(self.messages[-1]["role"], self.messages[-1]["content"])
 
     def generate_chat_response(self):
-        print(Fore.GREEN +f'ChatGPT:')
-        for chunk in openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=self.messages,
-            temperature=0,
-            stream=True,
-        ):
-            content = chunk["choices"][0].get("delta", {}).get("content")
-            if content is not None:
-                print(content, end='',flush=True)
-                self.chat_response += content
-        print("")
-        self.messages.append({"role": "assistant", "content": self.chat_response})
-        self.write_readble_to_txt(self.messages[-1]["role"], self.messages[-1]["content"])
-
+        try:
+            print(Fore.GREEN +f'ChatGPT:')
+            for chunk in openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=self.messages,
+                temperature=0,
+                #max_tokens=9999, # This model's maximum context length is 4097 tokens. However, you requested 10037 tokens (38 in the messages, 9999 in the completion). Please reduce the length of the messages or completion.
+                user=self.file_name,
+                stream=True,
+            ):
+                content = chunk["choices"][0].get("delta", {}).get("content")
+                if content is not None:
+                    print(content, end='',flush=True)
+                    self.chat_response += content
+            print("")
+            self.messages.append({"role": "assistant", "content": self.chat_response})
+            self.write_readble_to_txt(self.messages[-1]["role"], self.messages[-1]["content"])
+        except:
+            #https://platform.openai.com/docs/guides/rate-limits/error-mitigation
+            error_retry="Error happend. Retry..."
+            print(Fore.MAGENTA+error_retry+Fore.RESET)
+            time.sleep(3)
+            self.generate_chat_response()
     def run_chatbot(self):
         while True:
             self.get_user_input()
